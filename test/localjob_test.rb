@@ -52,14 +52,14 @@ class LocaljobTest < MiniTest::Unit::TestCase
     @localjob.enqueue(Walrus, "move", distance: 100)
     job = @localjob.pop
 
-    worker = Localjob::Worker.new
+    worker = Localjob::Worker.new(@localjob)
     worker.process(job)
   end
 
   def test_working_off_queue_in_child
     @localjob.enqueue(Walrus, "move", distance: 100)
 
-    worker = Localjob::Worker.new
+    worker = Localjob::Worker.new(@localjob)
     fork { worker.pop_and_process }
 
     Process.wait
@@ -68,7 +68,7 @@ class LocaljobTest < MiniTest::Unit::TestCase
 
   def test_sigquit_terminates_the_worker
     @localjob.enqueue(Walrus, "move", distance: 100)
-    worker = Localjob::Worker.new
+    worker = Localjob::Worker.new(@localjob)
 
     assert_equal 1, @localjob.size
 
@@ -84,7 +84,7 @@ class LocaljobTest < MiniTest::Unit::TestCase
     @localjob.logger.expects(:error).twice
     @localjob.enqueue(AngryWalrus, "be angry", angryness: 100)
 
-    worker = Localjob::Worker.new
+    worker = Localjob::Worker.new(@localjob)
     worker.pop_and_process # run just one job
   end
 
@@ -92,7 +92,7 @@ class LocaljobTest < MiniTest::Unit::TestCase
     @localjob.enqueue(AngryWalrus, "be angry", angryness: 100)
     @localjob.enqueue(Walrus, "be happy", happiness: 100)
 
-    worker = Localjob::Worker.new
+    worker = Localjob::Worker.new(@localjob)
     pid = fork { worker.work }
 
     Process.kill("QUIT", pid)
