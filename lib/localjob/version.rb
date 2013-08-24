@@ -1,3 +1,3 @@
-module Localjob
+class Localjob
   VERSION = "0.0.1"
 end

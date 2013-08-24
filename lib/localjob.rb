@@ -3,9 +3,7 @@ require 'posix/mqueue'
 require 'json'
 require 'logger'
 
-module Localjob
-  extend self
-
+class Localjob
   def queue
     @queue ||= POSIX::Mqueue.new("/localjob")
   end

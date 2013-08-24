@@ -14,7 +14,7 @@ end
 
 class LocaljobTest < MiniTest::Unit::TestCase
   def setup
-    @localjob = Localjob
+    @localjob = Localjob.new
 
     @localjob.logger = Logger.new("/dev/null")
   end
