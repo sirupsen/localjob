@@ -59,19 +59,10 @@ class Localjob
 
     def shift_and_process
       exit if @shutdown
-
-      job = wait { 
-        rr, wr = IO.select(@queues)
-        begin
-          rr.first.shift
-        rescue POSIX::Mqueue::QueueEmpty
-          false
-        end
-      }
-
-      logger.info "#{pid} got: #{job}"
+      job = reserve
 
       begin
+        logger.info "#{pid} got: #{job}"
         process job
       rescue Object => e
         logger.error "Worker #{pid} job failed: #{job}"
@@ -83,15 +74,16 @@ class Localjob
       Signal.trap("QUIT") { graceful_shutdown }
     end
 
-    def wait
+    def multiple_queue_shift
+      (queue,), = IO.select(@queues)
+      queue.shift
+    rescue POSIX::Mqueue::QueueEmpty
+      retry
+    end
+
+    def reserve
       @waiting = true
-      job = nil
-
-      loop {
-        job = yield
-        break if job
-      }
-
+      job = multiple_queue_shift
       @waiting = false
       job
     end
