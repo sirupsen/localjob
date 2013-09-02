@@ -18,7 +18,7 @@ class Localjob
   end
 
   def <<(object)
-    queue.timedsend encode(object)
+    queue.timedsend @serializer.dump(object)
   end
 
   def size
@@ -26,19 +26,11 @@ class Localjob
   end
 
   def shift
-    decode queue.receive
+    @serializer.load queue.receive
   end
 
   def destroy
     queue.unlink
-  end
-
-  def encode(object)
-    @serializer.dump object
-  end
-
-  def decode(value)
-    @serializer.load value
   end
 
   class Worker
