@@ -3,7 +3,7 @@ class Localjob
     attr_accessor :logger, :channel
 
     def initialize(queues, logger: Logger.new(STDOUT))
-      @channel = Channel.new(queues)
+      @channel, @logger = Channel.new(queues), logger
       @shutdown = false
     end
 
