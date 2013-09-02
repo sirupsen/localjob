@@ -11,11 +11,12 @@ simple that does not rely on any external services.  Localjob's API tries to be
 compatible with Resque's, that way you can `BackgroundQueue = Localjob` and
 replace it with Resque the day you need more power.
 
-The queue is persistent till reboot, you need to tune system parameters for your
-application, please consult [posix-mqueue][pmq-gem]'s documentation.
+The message queue is persistent till reboot. You will need to tune system
+parameters for your application, please consult [posix-mqueue][pmq-gem]'s
+documentation.
 
 This is WIP! Most of the code is there, but lacks documentation as well as a
-script to spawn workers.
+method to spawn workers.
 
 [pmq]: http://linux.die.net/man/7/mq_overview
 [pmq-gem]: https://github.com/Sirupsen/posix-mqueue
