@@ -13,5 +13,8 @@ with Resque one day if you ever need more power.
 The queue is persistent till reboot, you need to tune system parameters for your
 application, please consult [posix-mqueue][pmq-gem]'s documentation.
 
+This is WIP! Most of the code is there, but lacks documentation as well as a
+script to spawn workers.
+
 [pmq]: http://linux.die.net/man/7/mq_overview
 [pmq-gem]: https://github.com/Sirupsen/posix-mqueue
