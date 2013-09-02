@@ -3,9 +3,7 @@ require 'posix/mqueue'
 require 'json'
 require 'logger'
 
-module Localjob
-  extend self
-
+class Localjob
   def queue
     @queue ||= POSIX::Mqueue.new("/localjob")
   end
@@ -43,7 +41,8 @@ module Localjob
   end
 
   class Worker
-    def initialize
+    def initialize(queue)
+      @queue = queue
       @shutdown = false
     end
 
@@ -63,7 +62,7 @@ module Localjob
     def pop_and_process
       exit if @shutdown
 
-      job = wait { Localjob.pop }
+      job = wait { queue.pop }
       logger.info "#{pid} got: #{job}"
 
       begin
@@ -75,6 +74,9 @@ module Localjob
     end
 
     private
+
+    attr_reader :queue
+
     def trap_signals
       Signal.trap("QUIT") { graceful_shutdown }
     end
@@ -92,7 +94,7 @@ module Localjob
     end
 
     def logger
-      Localjob.logger
+      queue.logger
     end
   end
 end
