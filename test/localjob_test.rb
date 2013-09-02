@@ -20,13 +20,7 @@ class LocaljobTest < MiniTest::Unit::TestCase
   end
 
   def teardown
-    loop do
-      begin
-        @localjob.queue.timedreceive
-      rescue POSIX::Mqueue::QueueEmpty
-        break
-      end
-    end
+    clear_queue
   end
 
   def test_push_should_put_a_job_in_queue
@@ -104,6 +98,17 @@ class LocaljobTest < MiniTest::Unit::TestCase
   def test_throws_error_if_message_is_too_large
     assert_raises Errno::EMSGSIZE do
       @localjob.enqueue(AngryWalrus, "f" * @localjob.queue.msgsize)
+    end
+  end
+
+  private
+  def clear_queue
+    loop do
+      begin
+        @localjob.queue.timedreceive
+      rescue POSIX::Mqueue::QueueEmpty
+        break
+      end
     end
   end
 end
