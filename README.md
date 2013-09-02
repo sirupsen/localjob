@@ -1,29 +1,17 @@
 # Localjob
 
-TODO: Write a gem description
+Localjob is a simple background queue built on top of [POSIX message
+queues][pmq]. Workers and the app pushing to the queue must reside on the same
+machine.
 
-## Installation
+Localjob is for early-development situations where you don't need a
+full-featured background queue, but just want to get started with something
+simple that does not reply on any external services.  Localjob's API tries to
+look like Resque's, that way you can `BackgroundQueue = Localjob` and replace it
+with Resque one day if you ever need more power.
 
-Add this line to your application's Gemfile:
+The queue is persistent till reboot, you need to tune system parameters for your
+application, please consult [posix-mqueue][pmq-gem]'s documentation.
 
-    gem 'localjob'
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install localjob
-
-## Usage
-
-TODO: Write usage instructions here
-
-## Contributing
-
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+[pmq]: http://linux.die.net/man/7/mq_overview
+[pmq-gem]: https://github.com/Sirupsen/posix-mqueue
