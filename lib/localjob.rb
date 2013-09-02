@@ -37,8 +37,8 @@ class Localjob
   class Worker
     attr_accessor :queues, :logger
 
-    def initialize(queue, logger: Logger.new(STDOUT))
-      @queues = [queue].flatten
+    def initialize(queues, logger: Logger.new(STDOUT))
+      @queues = [queues].flatten
       @shutdown = false
     end
 
