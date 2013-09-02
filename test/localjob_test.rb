@@ -78,6 +78,8 @@ class LocaljobTest < MiniTest::Unit::TestCase
 
     pid = fork { @worker.work }
 
+    # Hack to account for race condition, 0.01s should be plenty
+    sleep 0.01
     Process.kill("QUIT", pid)
     Process.wait
 
