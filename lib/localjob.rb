@@ -6,11 +6,8 @@ require 'logger'
 class Localjob
   attr_reader :queue_name
 
-  attr_accessor :logger
-
-  def initialize(serializer: YAML, queue: "/localjob", logger: Logger.new(STDOUT))
+  def initialize(serializer: YAML, queue: "/localjob")
     @serializer, @queue_name = serializer, queue
-    @logger = logger
   end
 
   def queue
@@ -26,16 +23,22 @@ class Localjob
   end
 
   def shift
-    @serializer.load queue.receive
+    @serializer.load queue.timedreceive
   end
 
   def destroy
     queue.unlink
   end
 
+  def to_io
+    queue.to_io
+  end
+
   class Worker
-    def initialize(queue)
-      @queue = queue
+    attr_accessor :queues, :logger
+
+    def initialize(queue, logger: Logger.new(STDOUT))
+      @queues = [queue].flatten
       @shutdown = false
     end
 
@@ -54,12 +57,18 @@ class Localjob
 
     private
 
-    attr_reader :queue
-
     def shift_and_process
       exit if @shutdown
 
-      job = wait { queue.shift }
+      job = wait { 
+        rr, wr = IO.select(@queues)
+        begin
+          rr.first.shift
+        rescue POSIX::Mqueue::QueueEmpty
+          false
+        end
+      }
+
       logger.info "#{pid} got: #{job}"
 
       begin
@@ -76,7 +85,13 @@ class Localjob
 
     def wait
       @waiting = true
-      job = yield
+      job = nil
+
+      loop {
+        job = yield
+        break if job
+      }
+
       @waiting = false
       job
     end
@@ -84,10 +99,6 @@ class Localjob
     def graceful_shutdown
       exit if @waiting
       @shutdown = true
-    end
-
-    def logger
-      queue.logger
     end
   end
 end

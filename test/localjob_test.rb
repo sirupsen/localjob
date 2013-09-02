@@ -17,8 +17,7 @@ class LocaljobTest < MiniTest::Unit::TestCase
   def setup
     @localjob = Localjob.new
     @worker = Localjob::Worker.new(@localjob)
-
-    @localjob.logger = Logger.new("/dev/null")
+    @worker.logger = Logger.new("/dev/null")
   end
 
   def teardown
@@ -101,6 +100,29 @@ class LocaljobTest < MiniTest::Unit::TestCase
     assert_equal 1, @localjob.size
     assert_equal 1, queue.size
 
+  ensure
+    queue.destroy
+  end
+
+  def test_workers_listen_on_multiple_queues
+    @localjob << WalrusJob.new("move")
+
+    queue = Localjob.new(queue: "/other-queue")
+    queue << WalrusJob.new("dance")
+
+    @worker.queues << queue
+
+    pid = fork { @worker.work }
+
+    # Hack to account for race condition, 0.01s should be plenty
+    sleep 0.1
+    Process.kill("QUIT", pid)
+    Process.wait
+
+    assert_equal 0, @localjob.size
+    assert_equal 0, queue.size
+
+  ensure
     queue.destroy
   end
 
