@@ -8,7 +8,7 @@ than Localjob).
 Localjob is for early-development situations where you don't need a
 full-featured background queue, but just want to get started with something
 simple that does not rely on any external services.  Localjob's API tries to be
-compatible with Resque's, that way you can `BackgroundQueue = Localjob` and
+compatible with Resque's, that way you can `BackgroundQueue = Localjob.new` and
 replace it with Resque the day you need more power.
 
 The message queue is persistent till reboot. You will need to tune system
