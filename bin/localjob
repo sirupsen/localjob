@@ -17,6 +17,6 @@ end
 
 queue = Localjob.new
 worker = Localjob::Worker.new(queue)
-worker.logger.info "Worker #{worker.pid} listening.." 
+worker.logger.info "Worker #{worker.pid} listening.."
 
 worker.work
