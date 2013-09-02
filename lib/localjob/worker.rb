@@ -27,7 +27,7 @@ class Localjob
       job = wait { @channel.shift }
 
       begin
-        logger.info "#{pid} got: #{job}"
+        logger.info "Worker ##{pid}: #{job.inspect}"
         process job
       rescue Object => e
         logger.error "Worker #{pid} job failed: #{job}"
