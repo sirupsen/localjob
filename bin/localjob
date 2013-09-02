@@ -1,19 +1,9 @@
 #!/usr/bin/env ruby
 require 'localjob'
+require 'localjob/cli'
 
-file = ARGV[0]
-
-raise "No file passed" unless file
-
-# Rails
-if File.directory?(file) && File.exists?(File.expand_path("#{file}/config/environment.rb"))
-  require 'rails'
-  require File.expand_path("#{file}/config/environment.rb")
-  ::Rails.application.eager_load!
-else
-  # Not Rails
-  require File.expand_path(file)
-end
+cli = Localjob::CLI.new(ARGV.shift)
+cli.setup
 
 queue = Localjob.new
 worker = Localjob::Worker.new(queue)
