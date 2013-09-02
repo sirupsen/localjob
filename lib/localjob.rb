@@ -4,10 +4,17 @@ require 'yaml'
 require 'logger'
 
 class Localjob
-  QUEUE = "/localjob"
+  attr_reader :queue_name
+
+  attr_accessor :logger
+
+  def initialize(serializer: YAML, queue: "/localjob", logger: Logger.new(STDOUT))
+    @serializer, @queue_name = serializer, queue
+    @logger = logger
+  end
 
   def queue
-    @queue ||= POSIX::Mqueue.new QUEUE
+    @queue ||= POSIX::Mqueue.new(@queue_name)
   end
 
   def <<(object)
@@ -27,19 +34,11 @@ class Localjob
   end
 
   def encode(object)
-    YAML.dump object
+    @serializer.dump object
   end
 
   def decode(value)
-    YAML.load value
-  end
-
-  def logger
-    @logger ||= Logger.new(STDOUT)
-  end
-
-  def logger=(logger)
-    @logger = logger
+    @serializer.load value
   end
 
   class Worker
