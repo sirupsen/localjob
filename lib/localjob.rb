@@ -1,6 +1,6 @@
 require "localjob/version"
 require 'posix/mqueue'
-require 'json'
+require 'yaml'
 require 'logger'
 
 class Localjob
@@ -10,15 +10,15 @@ class Localjob
     @queue ||= POSIX::Mqueue.new QUEUE
   end
 
-  def enqueue(klass, *args)
-    queue.timedsend encode(klass, *args)
+  def <<(object)
+    queue.timedsend encode(object)
   end
 
   def size
     queue.size
   end
 
-  def pop
+  def shift
     decode queue.receive
   end
 
@@ -26,12 +26,12 @@ class Localjob
     queue.unlink
   end
 
-  def encode(klass, *args)
-    JSON.dump 'class' => klass.to_s, 'args' => args
+  def encode(object)
+    YAML.dump object
   end
 
   def decode(value)
-    JSON.load value
+    YAML.load value
   end
 
   def logger
@@ -49,7 +49,7 @@ class Localjob
     end
 
     def process(job)
-      Kernel.const_get(job["class"]).perform(*job["args"])
+      job.perform
     end
 
     def pid
@@ -58,26 +58,26 @@ class Localjob
 
     def work
       trap_signals
-      loop { pop_and_process }
+      loop { shift_and_process }
     end
 
-    def pop_and_process
+    private
+
+    attr_reader :queue
+
+    def shift_and_process
       exit if @shutdown
 
-      job = wait { queue.pop }
+      job = wait { queue.shift }
       logger.info "#{pid} got: #{job}"
 
       begin
         process job
       rescue Object => e
         logger.error "Worker #{pid} job failed: #{job}"
-        logger.error "#{$!}\n#{$@}"
+        logger.error "#{$!}\n#{$@.join("\n")}"
       end
     end
-
-    private
-
-    attr_reader :queue
 
     def trap_signals
       Signal.trap("QUIT") { graceful_shutdown }

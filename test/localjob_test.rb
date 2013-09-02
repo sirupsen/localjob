@@ -1,20 +1,22 @@
 require 'test_helper'
+require 'pry'
 
-class Walrus
-  def self.perform(action, options = {})
-    "nice try"
+class WalrusJob < Struct.new(:action)
+  def perform
+    "Nice try, but there's no way I'll #{action}.."
   end
 end
 
-class AngryWalrus
-  def self.perform(action, options = {})
-    raise "I am angry"
+class AngryWalrusJob < Struct.new(:angryness)
+  def perform
+    raise "I am this angry: #{angryness}"
   end
 end
 
 class LocaljobTest < MiniTest::Unit::TestCase
   def setup
     @localjob = Localjob.new
+    @worker = Localjob::Worker.new(@localjob)
 
     @localjob.logger = Logger.new("/dev/null")
   end
@@ -24,49 +26,45 @@ class LocaljobTest < MiniTest::Unit::TestCase
   end
 
   def test_push_should_put_a_job_in_queue
-    @localjob.enqueue(Walrus, :move)
+    @localjob << WalrusJob.new("move")
     assert_equal 1, @localjob.size
-    @localjob.pop
   end
 
   def test_pop_from_queue
-    @localjob.enqueue(Walrus, "move", distance: 100)
+    @localjob << WalrusJob.new("move")
 
-    expected = {
-      'class' => "Walrus",
-      'args' => ['move', { 'distance' => 100 }]
-    }
-
-    assert_equal expected, @localjob.pop
+    job = @localjob.shift
+    assert_instance_of WalrusJob, job
+    assert_equal "move", job.action
   end
 
   def test_pop_and_send_to_worker
-    Walrus.expects(:perform).with("move", "distance" => 100)
+    WalrusJob.any_instance.expects(:perform)
 
-    @localjob.enqueue(Walrus, "move", distance: 100)
-    job = @localjob.pop
+    @localjob << WalrusJob.new("move")
 
-    worker = Localjob::Worker.new(@localjob)
-    worker.process(job)
+    job = @localjob.shift
+    @worker.process(job)
   end
 
   def test_working_off_queue_in_child
-    @localjob.enqueue(Walrus, "move", distance: 100)
+    @localjob << WalrusJob.new("move")
 
-    worker = Localjob::Worker.new(@localjob)
-    fork { worker.pop_and_process }
+    fork do
+      job = @localjob.shift
+      @worker.process(job)
+    end
 
     Process.wait
     assert_equal 0, @localjob.size
   end
 
   def test_sigquit_terminates_the_worker
-    @localjob.enqueue(Walrus, "move", distance: 100)
-    worker = Localjob::Worker.new(@localjob)
+    @localjob << WalrusJob.new("move")
 
     assert_equal 1, @localjob.size
 
-    pid = fork { worker.work }
+    pid = fork { @worker.work }
 
     Process.kill("QUIT", pid)
     Process.wait
@@ -74,20 +72,11 @@ class LocaljobTest < MiniTest::Unit::TestCase
     assert_equal 0, @localjob.size
   end
 
-  def test_logs_errors_to_stderr
-    @localjob.logger.expects(:error).twice
-    @localjob.enqueue(AngryWalrus, "be angry", angryness: 100)
-
-    worker = Localjob::Worker.new(@localjob)
-    worker.pop_and_process # run just one job
-  end
-
   def test_doesnt_stop_on_error
-    @localjob.enqueue(AngryWalrus, "be angry", angryness: 100)
-    @localjob.enqueue(Walrus, "be happy", happiness: 100)
+    @localjob << AngryWalrusJob.new(100)
+    @localjob << WalrusJob.new("be happy")
 
-    worker = Localjob::Worker.new(@localjob)
-    pid = fork { worker.work }
+    pid = fork { @worker.work }
 
     Process.kill("QUIT", pid)
     Process.wait
@@ -97,7 +86,7 @@ class LocaljobTest < MiniTest::Unit::TestCase
 
   def test_throws_error_if_message_is_too_large
     assert_raises Errno::EMSGSIZE do
-      @localjob.enqueue(AngryWalrus, "f" * @localjob.queue.msgsize)
+      @localjob << AngryWalrusJob.new("f" * @localjob.queue.msgsize)
     end
   end
 
