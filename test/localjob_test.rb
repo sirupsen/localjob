@@ -92,6 +92,18 @@ class LocaljobTest < MiniTest::Unit::TestCase
     end
   end
 
+  def test_handles_multiple_queues
+    @localjob << WalrusJob.new("move")
+
+    queue = Localjob.new(queue: "/other-queue")
+    queue << WalrusJob.new("dance")
+
+    assert_equal 1, @localjob.size
+    assert_equal 1, queue.size
+
+    queue.destroy
+  end
+
   private
   def clear_queue
     loop do
