@@ -7,9 +7,9 @@ than Localjob).
 
 Localjob is for early-development situations where you don't need a
 full-featured background queue, but just want to get started with something
-simple that does not reply on any external services.  Localjob's API tries to
-look like Resque's, that way you can `BackgroundQueue = Localjob` and replace it
-with Resque one day if you ever need more power.
+simple that does not rely on any external services.  Localjob's API tries to be
+compatible with Resque's, that way you can `BackgroundQueue = Localjob` and
+replace it with Resque the day you need more power.
 
 The queue is persistent till reboot, you need to tune system parameters for your
 application, please consult [posix-mqueue][pmq-gem]'s documentation.
