@@ -1,13 +1,20 @@
-require "localjob/version"
 require 'posix/mqueue'
 require 'yaml'
 require 'logger'
 
+require "localjob/version"
+require 'localjob/channel'
+require 'localjob/worker'
+
 class Localjob
   attr_reader :queue_name
 
-  def initialize(serializer: YAML, queue: "/localjob")
-    @serializer, @queue_name = serializer, queue
+  def initialize(queue = "localjob")
+    @queue_name = fix_queue_name(queue)
+  end
+
+  def serializer
+    YAML
   end
 
   def queue
@@ -15,7 +22,7 @@ class Localjob
   end
 
   def <<(object)
-    queue.timedsend @serializer.dump(object)
+    queue.timedsend serializer.dump(object)
   end
 
   def size
@@ -23,7 +30,7 @@ class Localjob
   end
 
   def shift
-    @serializer.load queue.timedreceive
+    serializer.load queue.timedreceive
   end
 
   def destroy
@@ -34,63 +41,8 @@ class Localjob
     queue.to_io
   end
 
-  class Worker
-    attr_accessor :queues, :logger
-
-    def initialize(queues, logger: Logger.new(STDOUT))
-      @queues = [queues].flatten
-      @shutdown = false
-    end
-
-    def process(job)
-      job.perform
-    end
-
-    def pid
-      Process.pid
-    end
-
-    def work
-      trap_signals
-      loop { shift_and_process }
-    end
-
-    private
-
-    def shift_and_process
-      exit if @shutdown
-      job = reserve
-
-      begin
-        logger.info "#{pid} got: #{job}"
-        process job
-      rescue Object => e
-        logger.error "Worker #{pid} job failed: #{job}"
-        logger.error "#{$!}\n#{$@.join("\n")}"
-      end
-    end
-
-    def trap_signals
-      Signal.trap("QUIT") { graceful_shutdown }
-    end
-
-    def multiple_queue_shift
-      (queue,), = IO.select(@queues)
-      queue.shift
-    rescue POSIX::Mqueue::QueueEmpty
-      retry
-    end
-
-    def reserve
-      @waiting = true
-      job = multiple_queue_shift
-      @waiting = false
-      job
-    end
-
-    def graceful_shutdown
-      exit if @waiting
-      @shutdown = true
-    end
+  private
+  def fix_queue_name(queue)
+    queue.start_with?('/') ? queue : "/#{queue}"
   end
 end

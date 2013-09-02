@@ -16,7 +16,7 @@ end
 class LocaljobTest < MiniTest::Unit::TestCase
   def setup
     @localjob = Localjob.new
-    @worker = Localjob::Worker.new(@localjob)
+    @worker = Localjob::Worker.new(@localjob.queue_name)
     @worker.logger = Logger.new("/dev/null")
   end
 
@@ -94,7 +94,7 @@ class LocaljobTest < MiniTest::Unit::TestCase
   def test_handles_multiple_queues
     @localjob << WalrusJob.new("move")
 
-    queue = Localjob.new(queue: "/other-queue")
+    queue = Localjob.new("other-queue")
     queue << WalrusJob.new("dance")
 
     assert_equal 1, @localjob.size
@@ -107,10 +107,10 @@ class LocaljobTest < MiniTest::Unit::TestCase
   def test_workers_listen_on_multiple_queues
     @localjob << WalrusJob.new("move")
 
-    queue = Localjob.new(queue: "/other-queue")
+    queue = Localjob.new("/other-queue")
     queue << WalrusJob.new("dance")
 
-    @worker.queues << queue
+    @worker.channel << 'other-queue'
 
     pid = fork { @worker.work }
 
