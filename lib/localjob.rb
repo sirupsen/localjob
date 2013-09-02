@@ -4,8 +4,10 @@ require 'json'
 require 'logger'
 
 class Localjob
+  QUEUE = "/localjob"
+
   def queue
-    @queue ||= POSIX::Mqueue.new("/localjob")
+    @queue ||= POSIX::Mqueue.new QUEUE
   end
 
   def enqueue(klass, *args)
