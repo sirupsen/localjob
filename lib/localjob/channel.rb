@@ -11,12 +11,10 @@ class Localjob
     end
 
     def shift
-      begin
-        (queue,), = IO.select(@queues)
-        queue.shift
-      rescue POSIX::Mqueue::QueueEmpty
-        retry
-      end
+      (queue,), = IO.select(@queues)
+      queue.shift
+    rescue POSIX::Mqueue::QueueEmpty
+      retry
     end
 
     private
