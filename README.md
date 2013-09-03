@@ -16,14 +16,14 @@ The POSIX message queue is persistent till reboot. You will need to tune system
 parameters for your application, please consult [posix-mqueue][pmq-gem]'s
 documentation.
 
-Localjob works on Ruby >= 2.0.0 and Linux.
+Localjob works on Ruby >= 2.0.0 and Linux. I plan to create a mocking interface
+for testing on OS X, for now, monkeypatch the methods in to add to an array
+yourself.
 
-WIP not everything works as advertised, but try it out and report anything that
-doesn't work! It's not released as a gem yet, so add the following to your
-Gemfile to use it:
+Add it to your Gemfile:
 
 ```ruby
-gem 'localjob', git: "git@github.com:Sirupsen/localjob.git"
+gem 'localjob'
 ```
 
 ## Usage
