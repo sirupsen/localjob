@@ -31,6 +31,16 @@ class Localjob
       end
     end
 
+    desc "list", "Lists all queues"
+    def list
+      unless File.exists?("/dev/mqueue")
+        system "mkdir /dev/mqueue"
+        system "mount -t mqueue none /dev/mqueue"
+      end
+
+      system "ls -l /dev/mqueue"
+    end
+
     private
     def load_environment(file)
       if rails?(file)
