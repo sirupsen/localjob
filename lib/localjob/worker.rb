@@ -27,7 +27,9 @@ class Localjob
       job = wait { @channel.shift }
 
       begin
-        logger.info "Worker ##{pid}: #{job.inspect}"
+        job = wait { @channel.shift }
+
+        logger.info "Worker #{pid}: #{job.inspect}"
         process job
       rescue Object => e
         logger.error "Worker #{pid} job failed: #{job}"
@@ -47,7 +49,7 @@ class Localjob
     end
 
     def graceful_shutdown
-      exit if @waiting
+      exit! if @waiting
       @shutdown = true
     end
   end
