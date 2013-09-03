@@ -49,7 +49,8 @@ queue = Localjob.new
 queue << EmailJob.new(current_user.id, welcome_email)
 ```
 
-Then spawn a worker with `bin/localjob`.
+Then spawn a worker with `localjob work`. It takes a few arguments, like `-d` to
+deamonize itself. `localjob help work` to list all options.
 
 [pmq]: http://linux.die.net/man/7/mq_overview
 [pmq-gem]: https://github.com/Sirupsen/posix-mqueue
