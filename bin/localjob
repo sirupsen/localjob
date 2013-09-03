@@ -2,11 +2,4 @@
 require 'localjob'
 require 'localjob/cli'
 
-cli = Localjob::CLI.new(ARGV.shift)
-cli.setup
-
-queue = Localjob.new
-worker = Localjob::Worker.new(queue)
-worker.logger.info "Worker #{worker.pid} listening.."
-
-worker.work
+Localjob::CLI.start(ARGV)
