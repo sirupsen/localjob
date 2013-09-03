@@ -49,8 +49,37 @@ queue = Localjob.new
 queue << EmailJob.new(current_user.id, welcome_email)
 ```
 
-Then spawn a worker with `localjob work`. It takes a few arguments, like `-d` to
-deamonize itself. `localjob help work` to list all options.
+A job is serialized with YAML and pushed onto a persistent POSIX message queue.
+This means a worker does not have to listen on the queue to push things to it.
+Workers will pop off the message queue, but only one will receive the job.
+Deserialize the message to create an instance of your object, and call
+`#perform` on the object.
+
+### Managing workers
+
+Spawning workers can be done with `localjob`. Run `localjob work` to spawn a
+single worker. It takes a few arguments. The most important being `--require`
+which takes a path the worker will require before processing jobs. For Rails,
+you can run `localjob work` without any arguments. `localjob(2)` has a few other
+commands such as `list` to list all queues and `size` to list the size of all
+queues. `localjob help` to list all commands.
+
+Gracefully shut down workers by sending `SIGQUIT` to them. This will make sure
+the worker completes its current job before shutting down. Jobs can be sent to
+the queue meanwhile, and the worker will process them once it starts again.
+
+### Queues
+
+Localjobs supports multiple queues, and workers can be assigned to queues. By
+default everything is on a single queue. To push to a named queue:
+
+```ruby
+email = Localjob.new("email")
+email << EmailJob.new(current_user.id, welcome_email)
+```
+
+The worker spawn command `localjob work` takes a `--queues` argument which is a
+comma seperated list of queues to listen on, e.g. `localjob work --queues email,webhooks`.
 
 [pmq]: http://linux.die.net/man/7/mq_overview
 [pmq-gem]: https://github.com/Sirupsen/posix-mqueue
