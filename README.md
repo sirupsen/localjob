@@ -16,9 +16,9 @@ The POSIX message queue is persistent till reboot. You **will need to tune syste
 parameters for your application**, please consult [posix-mqueue][pmq-gem]'s
 documentation.
 
-Localjob works on Ruby >= 2.0.0 and Linux. I plan to create a mocking interface
-for testing on OS X, for now, monkeypatch the methods in to add to an array
-yourself.
+Localjob works on Ruby >= 2.0.0. On Linux, it will use the POSIX message queue.
+On OS X (and Windows, not tested) it will use a mock class instead of the
+message queue, to aid you in testing and running Localjob in development.
 
 Add it to your Gemfile:
 
@@ -80,6 +80,41 @@ email << EmailJob.new(current_user.id, welcome_email)
 
 The worker spawn command `localjob work` takes a `--queues` argument which is a
 comma seperated list of queues to listen on, e.g. `localjob work --queues email,webhooks`.
+
+### Testing
+
+Create your instance of the queue as normal in your setup:
+
+```ruby
+def setup
+  @queue = LocalJob.new("test-queue")
+end
+```
+
+In your `teardown` you'll want to destroy your queue:
+
+```ruby
+def teardown
+  @queue.destroy
+end
+```
+
+You can get the size of your queue by calling `@queue.size`. You pop off the
+queue with `@queue.shift`. Other than that, just use the normal API. You can
+also read the tests for Localjob to get an idea of how to test. Sample test:
+
+```ruby
+def test_pop_and_send_to_worker
+  WalrusJob.any_instance.expects(:perform)
+
+  @localjob << WalrusJob.new("move")
+
+  job = @localjob.shift
+  @worker.process(job)
+
+  assert_equal 0, @localjob.size
+end
+```
 
 [pmq]: http://linux.die.net/man/7/mq_overview
 [pmq-gem]: https://github.com/Sirupsen/posix-mqueue
