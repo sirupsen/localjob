@@ -1,3 +1,5 @@
+require 'posix/mqueue'
+
 class Localjob
   class LinuxAdapter
     attr_reader :mqueue

@@ -1,8 +1,3 @@
-begin
-  require 'posix/mqueue'
-rescue LoadError
-end
-
 require 'yaml'
 require 'logger'
 require 'forwardable'
