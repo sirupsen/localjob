@@ -1,11 +1,11 @@
 class Localjob
   class Worker
     attr_accessor :logger, :channel
+    attr_reader :options
 
-    def initialize(queues, logger: Logger.new(STDOUT), pid_file: false, deamon: false)
+    def initialize(queues, logger: Logger.new(STDOUT), **options)
       @channel, @logger = Channel.new(queues), logger
-      create_pid_file(pid_file)
-      deamonize if deamon
+      @options = options
       @shutdown = false
     end
 
@@ -21,6 +21,8 @@ class Localjob
     def work
       logger.info "Worker #{pid} now listening!"
       trap_signals
+      create_pid_file(@options[:pid_file])
+      deamonize if @options[:deamon]
       loop { shift_and_process }
     end
 
