@@ -2,8 +2,8 @@
 
 Localjob is a simple, self-contained background queue built on top of [POSIX
 message queues][pmq]. Workers and the app pushing to the queue must reside on
-the same machine. It's the sqlite of background queues (although sqlite scales
-further than Localjob). Here's a post about [how it works][blog].
+the same machine. It's the sqlite of background queues. Here's a post about [how
+it works][blog].
 
 Localjob is for early-development situations where you don't need a
 full-featured background queue, but just want to get started with something
