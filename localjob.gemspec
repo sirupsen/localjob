@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Localjob::VERSION
   spec.authors       = ["Simon Eskildsen"]
   spec.email         = ["sirup@sirupsen.com"]
-  spec.description   = %q{}
-  spec.summary       = %q{}
+  spec.description   = %q{Simple, self-contained background queue built on top of POSIX message queues.}
+  spec.summary       = %q{Simple, self-contained background queue built on top of POSIX message queues. It only works on Linux.}
   spec.homepage      = ""
   spec.license       = "MIT"
 
@@ -19,6 +19,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "posix-mqueue"
+  spec.add_dependency "thor"
 
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "rake"
