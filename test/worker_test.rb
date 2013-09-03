@@ -18,38 +18,26 @@ class WorkerTest < LocaljobTestCase
   def test_working_off_queue_in_child
     @localjob << WalrusJob.new("move")
 
-    fork do
+    a = Thread.start {
       job = @localjob.shift
       @worker.process(job)
-    end
+    }
 
-    Process.wait
-    assert_equal 0, @localjob.size
-  end
-
-  def test_sigquit_terminates_the_worker
-    @localjob << WalrusJob.new("move")
-
-    assert_equal 1, @localjob.size
-
-    pid = fork { @worker.work }
-
-    Process.kill("QUIT", pid)
-    Process.wait
+    a.join
 
     assert_equal 0, @localjob.size
   end
+
 
   def test_doesnt_stop_on_error
     @localjob << AngryWalrusJob.new(100)
     @localjob << WalrusJob.new("be happy")
 
-    pid = fork { @worker.work }
+    a = Thread.start { @worker.work }
 
     # Hack to account for race condition, 0.01s should be plenty
     sleep 0.01
-    Process.kill("QUIT", pid)
-    Process.wait
+    a.kill
 
     assert_equal 0, @localjob.size
   end
@@ -62,24 +50,36 @@ class WorkerTest < LocaljobTestCase
 
     @worker.channel << 'other-queue'
 
-    pid = fork { @worker.work }
+    a = Thread.start { @worker.work }
 
-    # Hack to account for race condition, 0.01s should be plenty
     sleep 0.01
-    Process.kill("QUIT", pid)
-    Process.wait
+    a.kill
 
     assert_equal 0, @localjob.size
     assert_equal 0, other.size
   end
 
   def test_worker_doesnt_die_on_bad_serialization
-    @localjob.queue.timedsend "--- !ruby/object:Whatever {}\n"
+    @localjob.queue.send "--- !ruby/object:Whatever {}\n"
 
-    pid = fork { @worker.work }
+    a = Thread.start { @worker.work }
 
     sleep 0.01
-    Process.kill("QUIT", pid)
-    Process.wait
+    a.kill
+  end
+ 
+  on_platform 'linux' do
+    def test_sigquit_terminates_the_worker
+      @localjob << WalrusJob.new("move")
+
+      assert_equal 1, @localjob.size
+
+      pid = fork { @worker.work }
+
+      Process.kill("QUIT", pid)
+      Process.wait
+
+      assert_equal 0, @localjob.size
+    end
   end
 end

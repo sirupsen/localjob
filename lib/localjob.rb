@@ -1,16 +1,26 @@
-require 'posix/mqueue'
+begin
+  require 'posix/mqueue'
+rescue LoadError
+end
+
 require 'yaml'
 require 'logger'
+require 'forwardable'
 
 require "localjob/version"
 require 'localjob/channel'
 require 'localjob/worker'
 
 class Localjob
-  attr_reader :queue_name
+  extend Forwardable
 
-  def initialize(queue = "localjob")
-    @queue_name = fix_queue_name(queue)
+  attr_reader :name
+  attr_accessor :queue
+
+  def_delegators :queue, :to_io, :destroy, :size
+
+  def initialize(name = "localjob")
+    @name = name
   end
 
   def serializer
@@ -18,31 +28,23 @@ class Localjob
   end
 
   def queue
-    @queue ||= POSIX::Mqueue.new(@queue_name)
+    return @queue if @queue
+
+    case RUBY_PLATFORM
+    when /linux/
+      require 'localjob/linux_adapter'
+      @queue = LinuxAdapter.new(@name)
+    else
+      require 'localjob/mock_adapter'
+      @queue = MockAdapter.new(@name)
+    end
   end
 
   def <<(object)
-    queue.timedsend serializer.dump(object)
-  end
-
-  def size
-    queue.size
+    queue.send serializer.dump(object)
   end
 
   def shift
-    serializer.load queue.timedreceive
-  end
-
-  def destroy
-    queue.unlink
-  end
-
-  def to_io
-    queue.to_io
-  end
-
-  private
-  def fix_queue_name(queue)
-    queue.start_with?('/') ? queue : "/#{queue}"
+    serializer.load queue.receive
   end
 end

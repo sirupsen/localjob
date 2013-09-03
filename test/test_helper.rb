@@ -41,4 +41,10 @@ class LocaljobTestCase < MiniTest::Unit::TestCase
     # It's slower. But safe.
     GC.start
   end
+
+  def self.on_platform(platform)
+    if RUBY_PLATFORM =~ /#{platform}/
+      yield
+    end
+  end
 end
