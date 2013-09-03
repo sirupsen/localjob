@@ -55,6 +55,22 @@ Workers will pop off the message queue, but only one will receive the job.
 Deserialize the message to create an instance of your object, and call
 `#perform` on the object.
 
+### Rails initializer
+
+For easy access to your queues in Rails, you can add an initializer to set up a
+constant referencing each of your queues. This allows easy access anywhere in
+your app. In `config/initializers/localjob.rb`:
+
+```ruby
+BackgroundQueue = Localjob.new("main-queue")
+```
+
+Then in your app you can simply reference the constant to push to the queue:
+
+```ruby
+BackgroundQueue << EmailJob.new(current_user.id, welcome_email)
+```
+
 ### Managing workers
 
 Spawning workers can be done with `localjob`. Run `localjob work` to spawn a
