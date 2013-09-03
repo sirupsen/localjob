@@ -12,8 +12,8 @@ project is to be able to migrate to another background queue system by switching
 adapter: `Localjob.adapter = Resque` to switch to Resque, without changes to
 your own code.
 
-The POSIX message queue is persistent till reboot. You will need to tune system
-parameters for your application, please consult [posix-mqueue][pmq-gem]'s
+The POSIX message queue is persistent till reboot. You **will need to tune system
+parameters for your application**, please consult [posix-mqueue][pmq-gem]'s
 documentation.
 
 Localjob works on Ruby >= 2.0.0 and Linux. I plan to create a mocking interface
