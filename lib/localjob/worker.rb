@@ -10,6 +10,7 @@ class Localjob
     end
 
     def process(job)
+      logger.info "Worker #{pid}: #{job.inspect}"
       job.perform
     end
 
@@ -26,17 +27,13 @@ class Localjob
     private
 
     def shift_and_process
-      exit if @shutdown
+      exit! if @shutdown
 
-      begin
-        job = wait { @channel.shift }
-
-        logger.info "Worker #{pid}: #{job.inspect}"
-        process job
-      rescue Object => e
-        logger.error "Worker #{pid} job failed: #{job}"
-        logger.error "#{$!}\n#{$@.join("\n")}"
-      end
+      job = wait { @channel.shift }
+      process job
+    rescue Object => e
+      logger.error "Worker #{pid} job failed: #{job}"
+      logger.error "#{$!}\n#{$@.join("\n")}"
     end
 
     def trap_signals
