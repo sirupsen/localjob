@@ -76,7 +76,7 @@ class WorkerTest < LocaljobTestCase
 
       pid = fork { @worker.work }
 
-      `kill -QUIT #{pid}`
+      Process.kill("QUIT", pid)
       Process.wait
 
       assert_equal 0, @localjob.size
