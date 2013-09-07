@@ -52,6 +52,8 @@ class WorkerTest < LocaljobTestCase
   end
 
   on_platform 'linux' do
+    # This won't work on OS X because the SysV IPC gem apparently doesnt give us
+    # interrupt syscalls to give us signals.
     def test_sigquit_terminates_the_worker
       @localjob << WalrusJob.new("move")
 
