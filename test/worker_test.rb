@@ -42,23 +42,6 @@ class WorkerTest < LocaljobTestCase
     assert_equal 0, @localjob.size
   end
 
-  def test_workers_listen_on_multiple_queues
-    @localjob << WalrusJob.new("move")
-
-    other = queue("other-queue")
-    other << WalrusJob.new("dance")
-
-    @worker.channel << 'other-queue'
-
-    a = Thread.start { @worker.work }
-
-    sleep 0.01
-    a.kill
-
-    assert_equal 0, @localjob.size
-    assert_equal 0, other.size
-  end
-
   def test_worker_doesnt_die_on_bad_serialization
     @localjob.queue.send "--- !ruby/object:Whatever {}\n"
 
@@ -67,7 +50,7 @@ class WorkerTest < LocaljobTestCase
     sleep 0.01
     a.kill
   end
- 
+
   on_platform 'linux' do
     def test_sigquit_terminates_the_worker
       @localjob << WalrusJob.new("move")
@@ -77,12 +60,29 @@ class WorkerTest < LocaljobTestCase
       pid = fork { @worker.work }
 
       # Hack to account for race condition, 0.01s should be plenty
-      sleep 0.01
+      sleep 0.1
 
       Process.kill("QUIT", pid)
       Process.wait
 
       assert_equal 0, @localjob.size
+    end
+
+    def test_workers_listen_on_multiple_queues
+      @localjob << WalrusJob.new("move")
+
+      other = queue("other-queue")
+      other << WalrusJob.new("dance")
+
+      @worker.channel << 'other-queue'
+
+      a = Thread.start { @worker.work }
+
+      sleep 0.01
+      a.kill
+
+      assert_equal 0, @localjob.size
+      assert_equal 0, other.size
     end
   end
 end

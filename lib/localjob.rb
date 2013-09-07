@@ -30,8 +30,8 @@ class Localjob
       require 'localjob/linux_adapter'
       @queue = LinuxAdapter.new(@name)
     else
-      require 'localjob/mock_adapter'
-      @queue = MockAdapter.new(@name)
+      require 'localjob/sysv_adapter'
+      @queue = SysvAdapter.new(@name)
     end
   end
 
