@@ -17,9 +17,7 @@ parameters for your application**, please consult [posix-mqueue][pmq-gem]'s
 documentation.
 
 Localjob works on Ruby >= 2.0.0. On Linux, it will use the POSIX message queue.
-On OS X (and Windows, not tested) it will use a mock class instead of the
-message queue, to aid you in testing and running Localjob in development. It
-could also fall back to SysV message queues, but it doesn't do that yet.
+On OS X it will use SysV message queues.
 
 Add it to your Gemfile:
 
