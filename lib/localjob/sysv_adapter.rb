@@ -21,7 +21,7 @@ class Localjob
     end
 
     def receive
-      @mq.receive(0, 1024)
+      @mq.receive(0, 8024)
     end
 
     def send(message)
