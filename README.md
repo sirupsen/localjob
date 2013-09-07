@@ -22,7 +22,7 @@ On OS X it will use SysV message queues.
 Add it to your Gemfile:
 
 ```ruby
-gem 'localjob'
+gem 'localjob', "0.1.0"
 ```
 
 ## Usage
