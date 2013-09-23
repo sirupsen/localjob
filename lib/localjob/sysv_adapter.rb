@@ -27,26 +27,21 @@ class Localjob
     end
 
     def receive
-      @mq.receive(0, 8024)
+      mq.receive(0, 8024)
     end
 
     def send(message)
-      @mq.send(1, message)
+      mq.send(1, message)
     end
 
     def size
-      @mq.ipc_stat.msg_qnum
+      mq.ipc_stat.msg_qnum
     end
 
     def destroy
       File.delete(@filename)
       @mq.rm
       @mq = nil
-    end
-
-    private
-    def fix_queue_name(name)
-      name.start_with?('/') ? name : "/#{name}"
     end
   end
 end
