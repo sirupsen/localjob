@@ -10,14 +10,20 @@ class Localjob
 
   class SysvAdapter
     include SysVIPC
-    attr_reader :mqueue
 
     def initialize(name)
       @filename = "/tmp/#{name}"
-      File.open(@filename, "w") { }
-      key = ftok(@filename, 0)
-
-      @mq = MessageQueue.new(key, IPC_CREAT | 0600)
+    end
+    
+    def mq
+      unless @mq
+        File.open(@filename, "w") { }
+        key = ftok(@filename, 0)
+  
+        @mq = MessageQueue.new(key, IPC_CREAT | 0600)
+      end
+      
+      @mq
     end
 
     def receive
@@ -35,6 +41,7 @@ class Localjob
     def destroy
       File.delete(@filename)
       @mq.rm
+      @mq = nil
     end
 
     private
