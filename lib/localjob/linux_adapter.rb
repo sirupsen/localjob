@@ -1,6 +1,15 @@
 require 'posix/mqueue'
 
 class Localjob
+  class Channel
+    def shift
+      (queue,), = IO.select(@queues)
+      queue.shift
+    rescue POSIX::Mqueue::QueueEmpty
+      retry
+    end
+  end
+
   class LinuxAdapter
     attr_reader :mqueue
 
