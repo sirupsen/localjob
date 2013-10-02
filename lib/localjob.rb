@@ -5,13 +5,7 @@ require 'forwardable'
 require "localjob/version"
 require 'localjob/channel'
 require 'localjob/worker'
-
-case RUBY_PLATFORM
-when /linux/
-  require 'localjob/linux_adapter'
-else
-  require 'localjob/sysv_adapter'
-end
+require 'localjob/sysv_adapter'
 
 class Localjob
   extend Forwardable
@@ -30,14 +24,7 @@ class Localjob
   end
 
   def queue
-    return @queue if @queue
-
-    case RUBY_PLATFORM
-    when /linux/
-      @queue = LinuxAdapter.new(@name)
-    else
-      @queue = SysvAdapter.new(@name)
-    end
+    @queue ||= SysvAdapter.new(@name)
   end
 
   def <<(object)
