@@ -3,7 +3,7 @@ require 'test_helper'
 class WorkerTest < LocaljobTestCase
   def setup
     @localjob = queue
-    @worker   = worker
+    @worker   = worker(@localjob)
   end
 
   def test_pop_and_send_to_worker
@@ -33,58 +33,53 @@ class WorkerTest < LocaljobTestCase
     @localjob << AngryWalrusJob.new(100)
     @localjob << WalrusJob.new("be happy")
 
-    a = Thread.start { @worker.work }
+    @worker.work(thread: true)
 
-    # Hack to account for race condition, 0.01s should be plenty
-    sleep 0.01
-    a.kill
+    sleep 0.1
+    @worker.kill
 
     assert_equal 0, @localjob.size
   end
 
   def test_worker_doesnt_die_on_bad_serialization
-    @localjob.queue.send "--- !ruby/object:Whatever {}\n"
+    @localjob << "--- !ruby/object:Whatever {}\n"
 
-    a = Thread.start { @worker.work }
-
-    sleep 0.01
-    a.kill
+    @worker.work(thread: true)
+    sleep 0.1
+    @worker.kill
   end
 
-  on_platform 'linux' do
-    # This won't work on OS X because the SysV IPC gem apparently doesnt give us
-    # interrupt syscalls to give us signals.
-    def test_sigquit_terminates_the_worker
-      @localjob << WalrusJob.new("move")
+  def test_sigquit_terminates_the_worker
+    @localjob << WalrusJob.new("move")
 
-      assert_equal 1, @localjob.size
+    assert_equal 1, @localjob.size
 
-      pid = fork { @worker.work }
+    pid = fork { @worker.work }
+    sleep 0.1
 
-      # Hack to account for race condition, 0.01s should be plenty
-      sleep 0.1
+    Process.kill("QUIT", pid)
 
-      Process.kill("QUIT", pid)
-      Process.wait
+    assert_equal 0, @localjob.size
+  end
 
-      assert_equal 0, @localjob.size
-    end
+  def test_sigquit_terminates_the_worker
+    @localjob << WalrusJob.new("move")
 
-    def test_workers_listen_on_multiple_queues
-      @localjob << WalrusJob.new("move")
+    pid = fork { @worker.work }
+    sleep 0.1
 
-      other = queue("other-queue")
-      other << WalrusJob.new("dance")
+    Process.kill("INT", pid)
+  end
 
-      @worker.channel << 'other-queue'
+  def test_thread_worker
+    @localjob << WalrusJob.new("move")
 
-      a = Thread.start { @worker.work }
+    assert_equal 1, @localjob.size
 
-      sleep 0.01
-      a.kill
+    @worker.work(thread: true)
+    sleep 0.1
+    @worker.kill
 
-      assert_equal 0, @localjob.size
-      assert_equal 0, other.size
-    end
+    assert_equal 0, @localjob.size
   end
 end

@@ -21,18 +21,10 @@ class LocaljobTest < LocaljobTestCase
   def test_handles_multiple_queues
     @localjob << WalrusJob.new("move")
 
-    other = queue("other-queue")
+    other = queue(0xDEADCAFE)
     other << WalrusJob.new("dance")
 
     assert_equal 1, @localjob.size
     assert_equal 1, other.size
-  end
-
-  on_platform 'linux' do
-    def test_throws_error_if_message_is_too_large
-      assert_raises Errno::EMSGSIZE do
-        @localjob << AngryWalrusJob.new("f" * @localjob.queue.mqueue.msgsize)
-      end
-    end
   end
 end

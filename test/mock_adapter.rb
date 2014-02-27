@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'localjob/mock_adapter'
 
 class MockAdapterTest < LocaljobTestCase
   def setup

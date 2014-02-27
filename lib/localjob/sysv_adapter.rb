@@ -1,47 +1,34 @@
-require 'SysVIPC'
+require 'sysvmq'
 
 class Localjob
-  class Channel
-    def shift
-      raise "SysV adapter does not support multiple queues" if @queues.size > 1
-      @queues.first.shift
-    end
-  end
-
   class SysvAdapter
-    include SysVIPC
+    RECEIVE_ALL_TYPES = 0
 
-    def initialize(name)
-      @filename = "/tmp/#{name}"
-    end
-    
-    def mq
-      unless @mq
-        File.open(@filename, "w") { }
-        key = ftok(@filename, 0)
-  
-        @mq = MessageQueue.new(key, IPC_CREAT | 0600)
-      end
-      
-      @mq
+    attr_reader :queue
+
+    def initialize(key, size: 8192, flags: SysVMQ::IPC_CREAT | 0660)
+      @key = key
+      @queue = SysVMQ.new(key, size, flags)
     end
 
     def receive
-      mq.receive(0, 8024)
+      queue.receive(RECEIVE_ALL_TYPES)
     end
 
     def send(message)
-      mq.send(1, message)
+      queue.send(message, 1)
     end
 
     def size
-      mq.ipc_stat.msg_qnum
+      queue.stats[:count]
+    end
+
+    def stats
+      queue.stats
     end
 
     def destroy
-      File.delete(@filename)
-      @mq.rm
-      @mq = nil
+      queue.destroy
     end
   end
 end

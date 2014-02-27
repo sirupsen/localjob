@@ -1,28 +1,22 @@
 # Localjob
 
-Localjob is a simple, self-contained background queue built on top of [POSIX
-message queues][pmq]. Workers and the app pushing to the queue must reside on
-the same machine. It's the sqlite of background queues. Here's a post about [how
-it works][blog].
+Localjob is a simple, self-contained background queue built on top of [System V
+message queues][sysv] (SysV Message Queue => SysV MQ for short). Workers and the
+app pushing to the queue must reside on the same machine. It's the sqlite of
+background queues. Here's a post about [how it works][blog].
 
 Localjob is for early-development situations where you don't need a
 full-featured background queue, but just want to get started with something
-simple that does not rely on any external services. A bigger goal with the
-project is to be able to migrate to another background queue system by switching
-adapter: `Localjob.adapter = Resque` to switch to Resque, without changes to
-your own code.
+simple that does not rely on any external services. The advantage of the SysV
+queues is that your Rails app or worker can restart at any time, without loosing
+any events.
 
-The POSIX message queue is persistent till reboot. You **will need to tune system
-parameters for your application**, please consult [posix-mqueue][pmq-gem]'s
-documentation.
-
-Localjob works on Ruby >= 2.0.0. On Linux, it will use the POSIX message queue.
-On OS X it will use SysV message queues.
+Localjob works on Ruby >= 2.0.0 on Linux and OS X.
 
 Add it to your Gemfile:
 
 ```ruby
-gem 'localjob', "0.1.0"
+gem 'localjob', "~> 0.2"
 ```
 
 ## Usage
@@ -48,10 +42,11 @@ queue = Localjob.new
 queue << EmailJob.new(current_user.id, welcome_email)
 ```
 
-A job is serialized with YAML and pushed onto a persistent POSIX message queue.
+A job is serialized with YAML and pushed onto a persistent SysV Message Queue.
 This means a worker does not have to listen on the queue to push things to it.
-Workers will pop off the message queue, but only one will receive the job.
-Deserialize the message to create an instance of your object, and call
+Pops off the message queue are atomic, so only one will receive the queue. This
+means you can run multiple workers on the same machine if you wish. The workers
+will deserialize the message to create an instance of your object, and call
 `#perform` on the object.
 
 ### Rails initializer
@@ -61,7 +56,7 @@ constant referencing each of your queues. This allows easy access anywhere in
 your app. In `config/initializers/localjob.rb`:
 
 ```ruby
-BackgroundQueue = Localjob.new("main-queue")
+BackgroundQueue = Localjob.new
 ```
 
 Then in your app you can simply reference the constant to push to the queue:
@@ -83,19 +78,6 @@ Gracefully shut down workers by sending `SIGQUIT` to them. This will make sure
 the worker completes its current job before shutting down. Jobs can be sent to
 the queue meanwhile, and the worker will process them once it starts again.
 
-### Queues
-
-Localjobs supports multiple queues, and workers can be assigned to queues. By
-default everything is on a single queue. To push to a named queue:
-
-```ruby
-email = Localjob.new("email")
-email << EmailJob.new(current_user.id, welcome_email)
-```
-
-The worker spawn command `localjob work` takes a `--queues` argument which is a
-comma seperated list of queues to listen on, e.g. `localjob work --queues email,webhooks`.
-
 ### Testing
 
 Create your instance of the queue as normal in your setup:
@@ -103,7 +85,7 @@ Create your instance of the queue as normal in your setup:
 ```ruby
 def setup
   @queue  = Localjob.new("test-queue")
-  @worker = Localjob::Worker.new("test-queue") 
+  @worker = Localjob::Worker.new("test-queue")
 end
 ```
 
@@ -132,6 +114,5 @@ def test_pop_and_send_to_worker
 end
 ```
 
-[pmq]: http://linux.die.net/man/7/mq_overview
-[pmq-gem]: https://github.com/Sirupsen/posix-mqueue
+[sysv]: http://man7.org/linux/man-pages/man7/svipc.7.html
 [blog]: http://sirupsen.com/unix-background-queue/
