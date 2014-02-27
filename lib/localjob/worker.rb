@@ -1,10 +1,12 @@
 class Localjob
   class Worker
-    attr_accessor :logger, :channel
-    attr_reader :options
+    TERMINATION_MESSAGE = "__TERMINATE__"
 
-    def initialize(queues, logger: Logger.new(STDOUT), **options)
-      @channel, @logger = Channel.new(queues), logger
+    attr_accessor :logger
+    attr_reader :options, :queue
+
+    def initialize(queue, logger: Logger.new(STDOUT), **options)
+      @queue, @logger = queue, logger
       @options = options
       @shutdown = false
     end
@@ -31,22 +33,20 @@ class Localjob
     def shift_and_process
       exit! if @shutdown
 
-      job = wait { @channel.shift }
+      job = queue.shift
+      exit! if job == TERMINATION_MESSAGE
+      # This means serialization failed
+      raise "Invalid job: #{job}" unless job
       process job
-    rescue Object => e
+    rescue Object
       logger.error "Worker #{pid} job failed: #{job}"
       logger.error "#{$!}\n#{$@.join("\n")}"
     end
 
     def trap_signals
-      Signal.trap("QUIT") { graceful_shutdown }
-    end
-
-    def wait
-      @waiting = true
-      job = yield
-      @waiting = false
-      job
+      Signal.trap("QUIT") do
+        @queue << TERMINATION_MESSAGE
+      end
     end
 
     def deamonize
@@ -55,11 +55,6 @@ class Localjob
 
     def create_pid_file(path)
       File.open(path, 'w') { |f| f << self.pid } if path
-    end
-
-    def graceful_shutdown
-      exit! if @waiting
-      @shutdown = true
     end
   end
 end

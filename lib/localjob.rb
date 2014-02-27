@@ -3,7 +3,6 @@ require 'logger'
 require 'forwardable'
 
 require "localjob/version"
-require 'localjob/channel'
 require 'localjob/worker'
 require 'localjob/sysv_adapter'
 
@@ -15,7 +14,8 @@ class Localjob
 
   def_delegators :queue, :to_io, :destroy, :size
 
-  def initialize(name = "localjob")
+  # LOCALJOB in 1337speak
+  def initialize(name = 0x10CA110B)
     @name = name
   end
 
@@ -33,5 +33,8 @@ class Localjob
 
   def shift
     serializer.load queue.receive
+  # Bad serialization
+  rescue Object
+    nil
   end
 end
