@@ -22,6 +22,8 @@ class Localjob
 
     def work(thread: false)
       logger.info "Worker #{pid} now listening!"
+      trap_signals
+
       return work_thread if thread
 
       create_pid_file(@options[:pid_file])
@@ -43,12 +45,11 @@ class Localjob
 
     def work_thread
       @thread = Thread.new do
-        trap_signals
-
         begin
           loop do
             shift_and_process
           end
+        # Respond to Thread.kill by sending termination message
         ensure
           shutdown
           work
@@ -63,7 +64,6 @@ class Localjob
       exit!
     end
 
-
     def shutdown
       @queue << TERMINATION_MESSAGE
     end
@@ -72,7 +72,7 @@ class Localjob
       job = queue.shift
       return shutdown! if job == TERMINATION_MESSAGE || !job
       process(job)
-      return true
+      return true # Explicit return of true, job#perform may return nil
     rescue Object
       logger.error "Worker #{pid} job failed: #{job}"
       logger.error "#{$!}\n#{$@.join("\n")}"
