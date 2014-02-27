@@ -30,42 +30,55 @@ class WorkerTest < LocaljobTestCase
 
 
   def test_doesnt_stop_on_error
-    # @localjob << AngryWalrusJob.new(100)
+    @localjob << AngryWalrusJob.new(100)
     @localjob << WalrusJob.new("be happy")
-    # p @localjob.size
 
-    a = Thread.start { @worker.work }
+    @worker.work(thread: true)
 
-    # Hack to account for race condition, 0.01s should be plenty
-    sleep 0.01
-    a.kill
+    sleep 0.1
+    @worker.kill
 
-    # assert_equal 0, @localjob.size
+    assert_equal 0, @localjob.size
   end
 
   def test_worker_doesnt_die_on_bad_serialization
-    @localjob.queue.send "--- !ruby/object:Whatever {}\n"
+    @localjob << "--- !ruby/object:Whatever {}\n"
 
-    a = Thread.start { @worker.work }
-
-    sleep 0.01
-    a.kill
+    @worker.work(thread: true)
+    sleep 0.1
+    @worker.kill
   end
 
-  # This won't work on OS X because the SysV IPC gem apparently doesnt give us
-  # interrupt syscalls to give us signals.
   def test_sigquit_terminates_the_worker
     @localjob << WalrusJob.new("move")
 
     assert_equal 1, @localjob.size
 
     pid = fork { @worker.work }
-
-    # Hack to account for race condition, 0.01s should be plenty
     sleep 0.1
 
     Process.kill("QUIT", pid)
-    Process.wait
+
+    assert_equal 0, @localjob.size
+  end
+
+  def test_sigquit_terminates_the_worker
+    @localjob << WalrusJob.new("move")
+
+    pid = fork { @worker.work }
+    sleep 0.1
+
+    Process.kill("INT", pid)
+  end
+
+  def test_thread_worker
+    @localjob << WalrusJob.new("move")
+
+    assert_equal 1, @localjob.size
+
+    @worker.work(thread: true)
+    sleep 0.1
+    @worker.kill
 
     assert_equal 0, @localjob.size
   end

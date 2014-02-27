@@ -20,33 +20,67 @@ class Localjob
       Process.pid
     end
 
-    def work
+    def work(thread: false)
       logger.info "Worker #{pid} now listening!"
-      trap_signals
+      return work_thread if thread
+
       create_pid_file(@options[:pid_file])
       deamonize if @options[:deamon]
-      loop { shift_and_process }
+
+      loop { break unless shift_and_process }
+    end
+
+    def kill
+      if @thread
+        Thread.kill(@thread)
+        @thread.join
+      else
+        shutdown
+      end
     end
 
     private
 
-    def shift_and_process
-      exit! if @shutdown
+    def work_thread
+      @thread = Thread.new do
+        trap_signals
 
+        begin
+          loop do
+            shift_and_process
+          end
+        ensure
+          shutdown
+          work
+        end
+      end
+    end
+
+    def shutdown!
+      logger.info "Worker #{pid} shutting down.."
+      File.rm(@options[:pid_file]) if @options[:pid_file]
+      return false if @thread
+      exit!
+    end
+
+
+    def shutdown
+      @queue << TERMINATION_MESSAGE
+    end
+
+    def shift_and_process
       job = queue.shift
-      exit! if job == TERMINATION_MESSAGE
-      # This means serialization failed
-      raise "Invalid job: #{job}" unless job
-      process job
+      return shutdown! if job == TERMINATION_MESSAGE || !job
+      process(job)
+      return true
     rescue Object
       logger.error "Worker #{pid} job failed: #{job}"
       logger.error "#{$!}\n#{$@.join("\n")}"
     end
 
     def trap_signals
-      Signal.trap("QUIT") do
-        @queue << TERMINATION_MESSAGE
-      end
+      Signal.trap("QUIT") { shutdown }
+      Signal.trap("INT") { shutdown }
     end
 
     def deamonize
