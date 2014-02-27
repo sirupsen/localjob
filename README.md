@@ -1,4 +1,4 @@
-# Localjob
+# Localjob [![Build Status](https://travis-ci.org/Sirupsen/localjob.png?branch=master)](https://travis-ci.org/Sirupsen/localjob) [![Code Climate](https://codeclimate.com/github/Sirupsen/localjob.png)](https://codeclimate.com/github/Sirupsen/localjob)
 
 Localjob is a simple, self-contained background queue built on top of [System V
 message queues][sysv] (SysV Message Queue => SysV MQ for short). Workers and the
