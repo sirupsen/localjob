@@ -105,17 +105,9 @@ class WorkerTest < LocaljobTestCase
     assert_equal 0, @localjob.size
   end
 
-  def test_sigint_terminates_the_worker
-    worker = Localjob::Worker.new(@localjob, deamonize: true, logger: Logger.new("/dev/null"))
-
-    @localjob << WalrusJob.new("move")
-
-    pid = fork { worker.work }
-    sleep 0.1
-
-    Process.kill("INT", pid)
-    sleep 0.1
-
-    assert_equal 0, @localjob.size
+  def test_sending_termination_message_calls_shutdown!
+    @localjob << Localjob::Worker::TERMINATION_MESSAGE
+    @worker.expects(:exit!)
+    @worker.work
   end
 end

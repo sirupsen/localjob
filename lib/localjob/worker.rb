@@ -28,7 +28,6 @@ class Localjob
       return work_thread if thread
 
       create_pid_file(@options[:pid_file])
-      deamonize if @options[:deamon]
 
       loop { break unless shift_and_process }
     end
@@ -82,10 +81,6 @@ class Localjob
     def trap_signals
       Signal.trap("QUIT") { shutdown }
       Signal.trap("INT") { shutdown }
-    end
-
-    def deamonize
-      Process.daemon(true, true)
     end
 
     def create_pid_file(path)
