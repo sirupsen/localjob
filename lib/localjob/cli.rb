@@ -20,6 +20,15 @@ class Localjob
         ::Rails.application.eager_load!
       elsif File.file?(file)
         require File.expand_path(file)
+      else
+        puts <<EOS
+To run a localjob worker, you must supply the --require flag. This is the file
+the worker requires before working off jobs.
+
+Otherwise localjob will complain about undefined classes, because they are not
+loaded in the context of the worker.
+EOS
+        exit!
       end
     end
 
