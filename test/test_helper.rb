@@ -1,11 +1,12 @@
+require 'coveralls'
+Coveralls.wear!
+
 require 'minitest/unit'
 require 'minitest/autorun'
 $:<< File.dirname(__FILE__) + "/../lib"
 require 'localjob'
 require "mocha/setup"
 require 'jobs'
-require 'coveralls'
-Coveralls.wear!
 
 class LocaljobTestCase < MiniTest::Unit::TestCase
   protected
