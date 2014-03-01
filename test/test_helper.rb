@@ -4,6 +4,8 @@ $:<< File.dirname(__FILE__) + "/../lib"
 require 'localjob'
 require "mocha/setup"
 require 'jobs'
+require 'coveralls'
+Coveralls.wear!
 
 class LocaljobTestCase < MiniTest::Unit::TestCase
   protected
