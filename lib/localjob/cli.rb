@@ -5,11 +5,10 @@ class Localjob
     option :queue,     aliases: ["-q"], type: :string, default: "0x10CA110B"
     option :require,   aliases: ["-r"], type: :string, default: "."
     option :pid_file,  aliases: ["-p"], type: :string
-    option :daemon,    aliases: ["-d"], type: :boolean
     desc "work", "Start worker to process jobs"
     def work
       load_environment options[:require]
-      Localjob::Worker.new(options[:queue].to_i(16), *options.slice(:daemon, :pid_file)).work
+      Localjob::Worker.new(options[:queue].to_i(16), *options.slice(:pid_file)).work
     end
 
     private
