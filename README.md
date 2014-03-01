@@ -84,8 +84,8 @@ Create your instance of the queue as normal in your setup:
 
 ```ruby
 def setup
-  @queue  = Localjob.new("test-queue")
-  @worker = Localjob::Worker.new("test-queue")
+  @queue  = Localjob.new
+  @worker = Localjob::Worker.new(@queue)
 end
 ```
 
