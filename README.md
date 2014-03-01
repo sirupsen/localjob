@@ -3,7 +3,8 @@
 Localjob is a simple, self-contained background queue built on top of [System V
 message queues][sysv] (SysV Message Queue => SysV MQ for short). Workers and the
 app pushing to the queue must reside on the same machine. It's the sqlite of
-background queues. Here's a post about [how it works][blog].
+background queues. Here's a post about [how it works][blog]. You can run
+Localjob either as a seperate process, or as a thread in your app.
 
 Localjob is for early-development situations where you don't need a
 full-featured background queue, but just want to get started with something
@@ -66,6 +67,24 @@ BackgroundQueue << EmailJob.new(current_user.id, welcome_email)
 ```
 
 ### Managing workers
+
+There are two ways to spawn workers, either a thread inside the process emitting
+events, or as a separate process managed with the `localjob` command-line
+utility.
+
+#### Thread
+
+Spawn the worker thread in an initializer where you are initializing Localjob as
+well:
+
+```ruby
+BackgroundQueue = Localjob.new
+
+worker = Localjob::Worker.new(BackgroundQueue, logger: Rails.logger)
+worker.work(thread: true)
+```
+
+#### Process
 
 Spawning workers can be done with `localjob`. Run `localjob work` to spawn a
 single worker. It takes a few arguments. The most important being `--require`
