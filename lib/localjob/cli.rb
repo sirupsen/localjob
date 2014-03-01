@@ -9,7 +9,7 @@ class Localjob
     desc "work", "Start worker to process jobs"
     def work
       load_environment options[:require]
-      Localjob::Worker.new(queues, options.slice(:daemon, :pid_file)).work
+      Localjob::Worker.new(queue.to_i(16), options.slice(:daemon, :pid_file)).work
     end
 
     private
