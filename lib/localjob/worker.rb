@@ -81,6 +81,7 @@ class Localjob
     def trap_signals
       Signal.trap("QUIT") { shutdown }
       Signal.trap("INT") { shutdown }
+      Signal.trap("TERM") { shutdown }
     end
 
     def create_pid_file(path)
