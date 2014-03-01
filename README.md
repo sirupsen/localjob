@@ -133,5 +133,19 @@ def test_pop_and_send_to_worker
 end
 ```
 
+### Multiple queues
+
+If you wish to have multiple queues you can have multiple Localjob objects
+referencing different queues. A worker can only work off a single queue at a
+time, so you will have to spawn multiple thread or process workers. Example:
+
+```ruby
+MailQueue    = Localjob.new(0xDEADC0DE)
+DefaultQueue = Localjob.new(0xDEADCAFE)
+```
+
+Note that Localjob takes a hex value as the queue name. This is how the SysV
+adapter identifies different queues.
+
 [sysv]: http://man7.org/linux/man-pages/man7/svipc.7.html
 [blog]: http://sirupsen.com/unix-background-queue/
