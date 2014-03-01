@@ -6,6 +6,10 @@ class WorkerTest < LocaljobTestCase
     @worker   = worker(@localjob)
   end
 
+  def teardown
+    @localjob.destroy
+  end
+
   def test_pop_and_send_to_worker
     WalrusJob.any_instance.expects(:perform)
 
@@ -58,17 +62,21 @@ class WorkerTest < LocaljobTestCase
     sleep 0.1
 
     Process.kill("QUIT", pid)
+    sleep 0.1
 
     assert_equal 0, @localjob.size
   end
 
-  def test_sigquit_terminates_the_worker
+  def test_sigint_terminates_the_worker
     @localjob << WalrusJob.new("move")
 
     pid = fork { @worker.work }
     sleep 0.1
 
     Process.kill("INT", pid)
+    sleep 0.1
+
+    assert_equal 0, @localjob.size
   end
 
   def test_thread_worker
@@ -79,6 +87,34 @@ class WorkerTest < LocaljobTestCase
     @worker.work(thread: true)
     sleep 0.1
     @worker.kill
+
+    assert_equal 0, @localjob.size
+  end
+
+  def test_kill_terminates_forked_worker
+    @localjob << WalrusJob.new("move")
+
+    assert_equal 1, @localjob.size
+
+    fork { @worker.work }
+    # Can do this immediately after, since it pushes a termination message to
+    # the queue.
+    @worker.kill
+    sleep 0.1
+
+    assert_equal 0, @localjob.size
+  end
+
+  def test_sigint_terminates_the_worker
+    worker = Localjob::Worker.new(@localjob, deamonize: true, logger: Logger.new("/dev/null"))
+
+    @localjob << WalrusJob.new("move")
+
+    pid = fork { worker.work }
+    sleep 0.1
+
+    Process.kill("INT", pid)
+    sleep 0.1
 
     assert_equal 0, @localjob.size
   end
