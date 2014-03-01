@@ -9,7 +9,7 @@ class Localjob
     desc "work", "Start worker to process jobs"
     def work
       load_environment options[:require]
-      Localjob::Worker.new(queue.to_i(16), options.slice(:daemon, :pid_file)).work
+      Localjob::Worker.new(options[:queue].to_i(16), *options.slice(:daemon, :pid_file)).work
     end
 
     private
@@ -20,9 +20,6 @@ class Localjob
         ::Rails.application.eager_load!
       elsif File.file?(file)
         require File.expand_path(file)
-      else
-        puts "No require path passed, requires -r if not in Rails"
-        exit
       end
     end
 

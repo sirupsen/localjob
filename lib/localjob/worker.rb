@@ -7,6 +7,7 @@ class Localjob
 
     def initialize(queue, logger: Logger.new(STDOUT), **options)
       @queue, @logger = queue, logger
+      @queue = Localjob.new(@queue) if queue.kind_of?(Fixnum)
       @options = options
       @shutdown = false
     end

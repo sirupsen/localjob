@@ -33,8 +33,5 @@ class Localjob
 
   def shift
     serializer.load queue.receive
-  # Bad serialization
-  rescue Object
-    nil
   end
 end
