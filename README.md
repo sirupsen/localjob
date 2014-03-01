@@ -16,7 +16,7 @@ Localjob works on Ruby >= 2.0.0 on Linux and OS X.
 Add it to your Gemfile:
 
 ```ruby
-gem 'localjob', "~> 0.2"
+gem 'localjob'
 ```
 
 ## Usage
