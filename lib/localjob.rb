@@ -12,7 +12,7 @@ class Localjob
   attr_reader :name
   attr_accessor :queue
 
-  def_delegators :queue, :to_io, :destroy, :size
+  def_delegators :queue, :stats, :destroy, :size
 
   # LOCALJOB in 1337speak
   def initialize(name = 0x10CA110B)

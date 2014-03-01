@@ -20,4 +20,10 @@ class SysvAdapterTest < LocaljobTestCase
     @localjob << "Hello World"
     assert_equal 1, @localjob.size
   end
+
+  def test_stats
+    @localjob << "Hello World"
+    assert_equal 20, @localjob.stats[:size]
+    assert_equal 1,  @localjob.stats[:count]
+  end
 end
