@@ -1,10 +1,13 @@
 # Localjob [![Build Status](https://travis-ci.org/Sirupsen/localjob.png?branch=master)](https://travis-ci.org/Sirupsen/localjob) [![Coverage Status](https://coveralls.io/repos/Sirupsen/localjob/badge.png?branch=master)](https://coveralls.io/r/Sirupsen/localjob?branch=master)
 
 Localjob is a simple, self-contained background queue built on top of [System V
-message queues][sysv] (SysV Message Queue => SysV MQ for short). Workers and the
-app pushing to the queue must reside on the same machine. It's the sqlite of
-background queues. Here's a post about [how it works][blog]. You can run
-Localjob either as a seperate process, or as a thread in your app.
+message queues][sysv] (SysV Message Queue => SysV MQ for short). The SysV
+message queue API is implemented by the kernel. It's very stable and performant.
+
+This means workers and the app pushing to the queue must reside on the same
+machine. It's the sqlite of background queues. Here's a post about [how it
+works][blog]. You can run Localjob either as a seperate process, or as a thread
+in your app.
 
 Localjob is for early-development situations where you don't need a
 full-featured background queue, but just want to get started with something
