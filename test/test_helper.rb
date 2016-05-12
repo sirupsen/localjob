@@ -1,14 +1,13 @@
 require 'coveralls'
 Coveralls.wear!
 
-require 'minitest/unit'
 require 'minitest/autorun'
 $:<< File.dirname(__FILE__) + "/../lib"
 require 'localjob'
 require "mocha/setup"
 require 'jobs'
 
-class LocaljobTestCase < MiniTest::Unit::TestCase
+class LocaljobTestCase < MiniTest::Test
   protected
   # This is a method to make sure the logger is set right.
   def worker(queue)
@@ -29,10 +28,7 @@ class LocaljobTestCase < MiniTest::Unit::TestCase
   end
 
   def logger
-    return @logger if @logger
-
-    output_file = ENV["DEBUG"] ? STDOUT : "/dev/null"
-    @logger = Logger.new(output_file)
+    @logger ||= Logger.new(ENV["DEBUG"] ? STDOUT : "/dev/null")
   end
 
   def clear_queues
