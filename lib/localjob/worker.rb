@@ -10,6 +10,7 @@ class Localjob
       @queue = Localjob.new(@queue) if queue.kind_of?(Fixnum)
       @options = options
       @shutdown = false
+      @thread = nil
     end
 
     def process(job)
