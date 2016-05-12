@@ -10,7 +10,7 @@ class Localjob
   extend Forwardable
 
   attr_reader :name
-  attr_accessor :queue
+  attr_writer :queue
 
   def_delegators :queue, :stats, :destroy, :size
 
