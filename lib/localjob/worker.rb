@@ -6,8 +6,8 @@ class Localjob
     attr_reader :options, :queue
 
     def initialize(queue, logger: Logger.new(STDOUT), **options)
-      @queue, @logger = queue, logger
-      @queue = Localjob.new(@queue) if queue.kind_of?(Fixnum)
+      @logger = logger
+      @queue = queue.kind_of?(Fixnum) ? Localjob.new(@queue) : queue
       @options = options
       @shutdown = false
       @thread = nil
@@ -74,6 +74,10 @@ class Localjob
       return shutdown! if job == TERMINATION_MESSAGE || !job
       process(job)
       return true # Explicit return of true, job#perform may return nil
+    rescue Errno::EINVAL
+      logger.error "Worker #{pid}: queue was likely destroyed"
+      logger.error "#{$!}\n#{$@.join("\n")}"
+      shutdown!
     rescue Object
       logger.error "Worker #{pid} job failed: #{job}"
       logger.error "#{$!}\n#{$@.join("\n")}"
