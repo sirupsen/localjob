@@ -27,4 +27,18 @@ class LocaljobTest < LocaljobTestCase
     assert_equal 1, @localjob.size
     assert_equal 1, other.size
   end
+
+	def test_send_raises_error_if_queue_does_not_exist
+		assert_raises Errno::EINVAL do
+			@localjob.destroy
+			@localjob << WalrusJob.new("move")
+		end
+	end
+
+  def test_shift_raises_error_if_queue_does_not_exist
+	  assert_raises Errno::EINVAL do
+		  @localjob.destroy
+		  @localjob.shift
+	  end
+  end
 end
