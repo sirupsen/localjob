@@ -1,3 +1,5 @@
+require 'fileutils'
+
 class Localjob
   class Worker
     TERMINATION_MESSAGE = "__TERMINATE__"
@@ -60,7 +62,7 @@ class Localjob
 
     def shutdown!
       logger.info "Worker #{pid} shutting down.."
-      File.rm(@options[:pid_file]) if @options[:pid_file]
+      FileUtils.rm(@options[:pid_file]) if @options[:pid_file]
       return false if @thread
       exit!
     end
