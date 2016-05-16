@@ -110,4 +110,14 @@ class WorkerTest < LocaljobTestCase
     @worker.expects(:exit!)
     @worker.work
   end
+
+  def test_worker_stops_when_it_can_not_communicate_with_queue
+    localjob = Localjob.new(0xABCDEF12)
+    worker = Localjob::Worker.new(localjob, logger: Logger.new('/dev/null'))
+
+    localjob.destroy
+
+    worker.expects(:shutdown!)
+    worker.work
+  end
 end

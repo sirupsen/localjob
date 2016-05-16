@@ -26,4 +26,9 @@ class SysvAdapterTest < LocaljobTestCase
     assert_equal 20, @localjob.stats[:size]
     assert_equal 1,  @localjob.stats[:count]
   end
+
+  def test_multiple_destroys_do_not_raise_exception
+    @localjob.destroy
+    @localjob.destroy
+  end
 end

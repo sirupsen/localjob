@@ -29,6 +29,8 @@ class Localjob
 
     def destroy
       queue.destroy
+    rescue Errno::EINVAL
+      # Queue likely doesn't exist or was destroyed.
     end
   end
 end
