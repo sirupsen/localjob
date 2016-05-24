@@ -7,6 +7,10 @@ class Localjob
     attr_accessor :logger
     attr_reader :options, :queue
 
+    # Params:
+    # +option+::
+    #   +pid_file+:: File path for storing PID value
+    #   +job_needs_logger+:: Boolean that indicates that the logger instance should be passed to the job's perform method. Default is false.
     def initialize(queue, logger: Logger.new(STDOUT), **options)
       @logger = logger
       @queue = queue.kind_of?(Fixnum) ? Localjob.new(@queue) : queue
@@ -17,7 +21,11 @@ class Localjob
 
     def process(job)
       logger.info "Worker #{pid}: #{job.inspect}"
-      job.perform
+      if @options[:job_needs_logger]
+        job.perform(logger)
+      else
+        job.perform
+      end
     end
 
     def pid

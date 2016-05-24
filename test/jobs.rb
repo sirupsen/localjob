@@ -9,3 +9,9 @@ class AngryWalrusJob < Struct.new(:angryness)
     raise "I am this angry: #{angryness}"
   end
 end
+
+class WaterLoggedWalrusJob < Struct.new(:level)
+  def perform(logger)
+    logger.warn("I'm #{level} water logged")
+  end
+end

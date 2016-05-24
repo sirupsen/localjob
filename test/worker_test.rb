@@ -120,4 +120,22 @@ class WorkerTest < LocaljobTestCase
     worker.expects(:shutdown!)
     worker.work
   end
+
+  def test_options_parameter
+    worker = Localjob::Worker.new(@localjob, logger: Logger.new('/dev/null'))
+    assert_empty worker.options
+    assert_nil worker.options[:pid_file]
+    assert_nil worker.options[:job_needs_logger]
+
+    worker = Localjob::Worker.new(@localjob, logger: Logger.new('/dev/null'), pid_file: '/dev/null', job_needs_logger: true)
+    assert_equal '/dev/null', worker.options[:pid_file]
+    assert_same true, worker.options[:job_needs_logger]
+  end
+
+  def test_process_sends_logger_to_job_perform
+    l = Logger.new('/dev/null')
+    l.expects(:warn).once
+    worker = Localjob::Worker.new(@localjob, logger: l, job_needs_logger: true)
+    worker.process(WaterLoggedWalrusJob.new('highly'))
+  end
 end
